@@ -16,7 +16,7 @@ on:
 jobs:
   test:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -31,3 +31,28 @@ jobs:
       run: bundle install
     - name: Run Example
       run: bundle exec app.rb
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up rubyc
+      run: |
+        sudo apt-get update && sudo apt-get install -y build-essential libtinfo-dev libffi-dev libncurses-dev pkg-config libssl-dev squashfs-tools && \
+        mkdir -p $HOME/bin && \
+        mkdir -p $HOME/tmp && \
+        curl -L https://github.com/pmq20/ruby-packer/releases/download/linux-x64/rubyc --output $HOME/bin/rubyc && \
+        chmod u+x $HOME/bin/rubyc
+    - name: Set up Ruby
+    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
+    # change this to (see https://github.com/ruby/setup-ruby#versioning):
+    # uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@ec106b438a1ff6ff109590de34ddc62c540232e0
+      with:
+        ruby-version: 2.7.1
+    - name: Install dependencies
+      run: bundle install
+    - name: Build app
+      run: $HOME/bin/rubyc --tmpdir=$HOME/tmp app.rb -o app.out
+    - name: Run executable
+      run: ./app.out
